@@ -1,20 +1,16 @@
 ﻿using System;
 using System.IO;
 using System.Net;
-using System.Net.Sockets; // Added for finding free port
-using System.Text;
-using System.Threading;
+using System.Net.Sockets; 
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Microsoft.Web.WebView2.Core;
-using Microsoft.Web.WebView2.WinForms;
 
 namespace YTsearch_Winforms
 {
     public partial class Form1 : Form
     {
         private SimpleWebServer _webServer;
-        private string _localUrl; // Not const anymore, determined at runtime
+        private string _localUrl; 
 
         public Form1()
         {
@@ -25,17 +21,15 @@ namespace YTsearch_Winforms
 
         private async void Form1_Load(object sender, EventArgs e)
         {
-            // 1. Determine where your wwwroot folder is
             string webRootPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot");
 
-            if (Directory.Exists(webRootPath))
+            if (!Directory.Exists(webRootPath))
             {
-                MessageBox.Show("wwwroot folder not found at: " + webRootPath);
+                MessageBox.Show("wwwroot folder not found at:\n" + webRootPath, "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 Close();
                 return;
             }
 
-            // 2. Start the internal localhost server on a DYNAMIC free port
             try
             {
                 int port = GetFreeTcpPort();
@@ -50,20 +44,16 @@ namespace YTsearch_Winforms
                 return;
             }
 
-            // 3. Initialize WebView2
             await webView21.EnsureCoreWebView2Async();
 
-            // 4. Point WebView2 to your local server
             webView21.Source = new Uri(_localUrl + "index.html");
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            // Cleanup: Stop the server when app closes
             _webServer?.Stop();
         }
 
-        // Helper to find a random open port so we don't crash nicely
         private static int GetFreeTcpPort()
         {
             TcpListener l = new TcpListener(IPAddress.Loopback, 0);
@@ -74,7 +64,6 @@ namespace YTsearch_Winforms
         }
     }
 
-    // --- INTERNAL WEB SERVER CLASS ---
     public class SimpleWebServer
     {
         private readonly HttpListener _listener = new HttpListener();
@@ -99,7 +88,6 @@ namespace YTsearch_Winforms
             }
             catch (HttpListenerException ex)
             {
-                // If this fails, it bubbles up to Form1_Load to show the error
                 throw new Exception($"Could not bind to port. Details: {ex.Message}");
             }
         }
@@ -115,8 +103,8 @@ namespace YTsearch_Winforms
                 }
                 _listener.Close();
             }
-            catch (ObjectDisposedException) { /* Ignored: Server already dead */ }
-            catch (Exception) { /* Ignored: Cleanup errors shouldn't crash app */ }
+            catch (ObjectDisposedException) {  }
+            catch (Exception) { }
         }
 
         private async void ListenLoop()
@@ -125,14 +113,13 @@ namespace YTsearch_Winforms
             {
                 try
                 {
-                    // Check if we are still listening before getting context
                     if (!_listener.IsListening) break;
 
                     var context = await _listener.GetContextAsync();
                     ProcessRequest(context);
                 }
-                catch (HttpListenerException) { break; } // Listener stopped
-                catch (ObjectDisposedException) { break; } // Object gone
+                catch (HttpListenerException) { break; } 
+                catch (ObjectDisposedException) { break; } 
                 catch (InvalidOperationException) { break; }
             }
         }
@@ -141,7 +128,7 @@ namespace YTsearch_Winforms
         {
             try
             {
-                string filename = context.Request.Url.AbsolutePath.Substring(1); // Remove leading slash
+                string filename = context.Request.Url.AbsolutePath.Substring(1); 
                 if (string.IsNullOrEmpty(filename)) filename = "index.html";
 
                 string filePath = Path.Combine(_rootPath, filename.Replace('/', Path.DirectorySeparatorChar));
@@ -163,7 +150,6 @@ namespace YTsearch_Winforms
             }
             catch
             {
-                // If writing to the stream fails (e.g. browser closed connection), just ignore
                 try { context.Response.Close(); } catch { }
             }
         }
