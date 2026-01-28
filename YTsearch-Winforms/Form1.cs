@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets; 
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Web;
 
 namespace YTsearch_Winforms
 {
@@ -124,8 +125,34 @@ namespace YTsearch_Winforms
             }
         }
 
-        private void ProcessRequest(HttpListenerContext context)
+        private YouTubeSearchService _searchService = new YouTubeSearchService();
+        private async void ProcessRequest(HttpListenerContext context)
         {
+            // Inside your HTTP Request Loop/Method
+            string urlPath = context.Request.Url.AbsolutePath;
+
+            if (urlPath == "/api/search")
+            {
+                // 1. Get parameters from the URL (sent by script.js)
+                var queryParams = System.Web.HttpUtility.ParseQueryString(context.Request.Url.Query);
+                string q = queryParams["q"];
+                string key = queryParams["key"];
+                string pageToken = queryParams["pageToken"];
+                string publishedAfter = queryParams["publishedAfter"];
+                string publishedBefore = queryParams["publishedBefore"];
+
+                // 2. Call the Brain (The C# Service)
+                // This runs the complex logic we just wrote
+                string jsonResponse = await _searchService.SearchAsync(q, key, pageToken, publishedAfter, publishedBefore);
+
+                // 3. Send the response back to script.js
+                byte[] buffer = System.Text.Encoding.UTF8.GetBytes(jsonResponse);
+                context.Response.ContentType = "application/json";
+                context.Response.ContentLength64 = buffer.Length;
+                context.Response.OutputStream.Write(buffer, 0, buffer.Length);
+                context.Response.OutputStream.Close();
+                return; // Done!
+            }
             try
             {
                 string filename = context.Request.Url.AbsolutePath.Substring(1); 

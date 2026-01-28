@@ -1,104 +1,92 @@
 ﻿using System;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes; // Requires System.Text.Json
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace YTsearch_Winforms
+public class YouTubeSearchService
 {
-    public partial class YouTubeSearchService : Component
-    {
-        //private readonly HttpClient _httpClient;
+    // PASTE YOUR FALLBACK API KEY HERE
+    // This acts like process.env.YOUTUBE_API_KEY
+    private readonly string _defaultApiKey = "";
+    private readonly HttpClient _httpClient;
 
-        public YouTubeSearchService()
+    public YouTubeSearchService()
+    {
+        _httpClient = new HttpClient();
+    }
+
+    public async Task<string> SearchAsync(string query, string userApiKey, string pageToken, string publishedAfter, string publishedBefore)
+    {
+        // 1. Determine which API Key to use (User's key > Default key)
+        string apiKey = !string.IsNullOrWhiteSpace(userApiKey) && userApiKey != "undefined"
+            ? userApiKey
+            : _defaultApiKey;
+
+        if (string.IsNullOrEmpty(apiKey) || apiKey == "YOUR_DEFAULT_API_KEY_HERE")
         {
-            InitializeComponent();
-            //_httpClient = new HttpClient();
+            return JsonSerializer.Serialize(new { error = new { message = "API Key is missing. Please configure it in settings." } });
         }
 
-        //public YouTubeSearchService(IContainer container)
-        //{
-        //    container.Add(this);
-        //    InitializeComponent();
-        //    _httpClient = new HttpClient();
-        //}
+        // 2. Build the YouTube API URL
+        // We use Uri.EscapeDataString which is the C# equivalent of encodeURIComponent
+        string url = $"https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=50&key={apiKey}&q={Uri.EscapeDataString(query)}";
 
-        //// The Main Function: Replaces 'export default async function handler(req, res)'
-        //public async Task<string> SearchAsync(string query, string apiKey, string pageToken, string publishedAfter, string publishedBefore)
-        //{
-        //    // 1. Validation (Matches 'if (!q)...')
-        //    if (string.IsNullOrWhiteSpace(query))
-        //    {
-        //        return JsonSerializer.Serialize(new { error = "Search query 'q' is required." });
-        //    }
+        if (!string.IsNullOrEmpty(pageToken) && pageToken != "undefined") url += $"&pageToken={pageToken}";
+        if (!string.IsNullOrEmpty(publishedAfter) && publishedAfter != "undefined") url += $"&publishedAfter={publishedAfter}";
+        if (!string.IsNullOrEmpty(publishedBefore) && publishedBefore != "undefined") url += $"&publishedBefore={publishedBefore}";
 
-        //    // 2. Build URL (Matches 'let url = ...')
-        //    var baseUrl = "https://www.googleapis.com/youtube/v3/search";
-        //    var url = $"{baseUrl}?part=snippet&type=video&maxResults=50&key={apiKey}&q={Uri.EscapeDataString(query)}";
+        try
+        {
+            // 3. Fetch from YouTube (The "Fetch" part of search.js)
+            HttpResponseMessage response = await _httpClient.GetAsync(url);
+            string jsonString = await response.Content.ReadAsStringAsync();
 
-        //    if (!string.IsNullOrEmpty(pageToken)) url += $"&pageToken={pageToken}";
-        //    if (!string.IsNullOrEmpty(publishedAfter)) url += $"&publishedAfter={publishedAfter}";
-        //    if (!string.IsNullOrEmpty(publishedBefore)) url += $"&publishedBefore={publishedBefore}";
+            // Parse JSON dynamically so we don't need to create huge C# classes
+            JsonNode root = JsonNode.Parse(jsonString);
 
-        //    try
-        //    {
-        //        // 3. Fetch Data (Matches 'const youtubeResponse = await fetch(url)')
-        //        var response = await _httpClient.GetAsync(url);
-        //        var jsonString = await response.Content.ReadAsStringAsync();
+            if (!response.IsSuccessStatusCode)
+            {
+                // Pass the error error back to the frontend
+                return jsonString;
+            }
 
-        //        if (!response.IsSuccessStatusCode)
-        //        {
-        //            // Pass the error error straight back to UI
-        //            return jsonString;
-        //        }
+            // 4. The Logic: "Match Words" Filter (The "Filter" part of search.js)
+            // We look at root["items"] and filter it just like your JS filter() function
+            if (root["items"] is JsonArray items)
+            {
+                var searchTerms = query.Trim().ToLower().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-        //        // 4. Parse & Filter (Matches 'if (data.items && q)...')
-        //        // We use JsonNode so we can modify the array without creating a C# class for the whole YouTube API
-        //        JsonNode rootNode = JsonNode.Parse(jsonString);
-        //        JsonArray items = rootNode["items"]?.AsArray();
+                // Filter the items
+                var filteredItems = items.Where(item =>
+                {
+                    string title = item["snippet"]?["title"]?.ToString() ?? "";
+                    string description = item["snippet"]?["description"]?.ToString() ?? "";
+                    string contentToCheck = (title + " " + description).ToLower();
 
-        //        if (items != null && items.Count > 0)
-        //        {
-        //            // Split query into terms (Matches 'q.trim().toLowerCase().split...')
-        //            var searchTerms = query.Trim().ToLower().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    // Check if ALL terms match using Regex (Whole Word Match)
+                    return searchTerms.All(term =>
+                    {
+                        // Escaping regex characters, just like in your JS
+                        string escapedTerm = Regex.Escape(term);
+                        // \b matches word boundaries
+                        return Regex.IsMatch(contentToCheck, $@"\b{escapedTerm}\b");
+                    });
+                }).ToArray();
 
-        //            // Filter logic: We iterate backwards because we are removing items
-        //            for (int i = items.Count - 1; i >= 0; i--)
-        //            {
-        //                var item = items[i];
-        //                string title = item["snippet"]?["title"]?.ToString() ?? "";
-        //                string description = item["snippet"]?["description"]?.ToString() ?? "";
+                // Replace the original items with the filtered list
+                root["items"] = new JsonArray(filteredItems);
+            }
 
-        //                // Combine title + desc (Matches 'const contentToCheck = ...')
-        //                string contentToCheck = (title + " " + description).ToLower();
-
-        //                // Check all terms (Matches 'return searchTerms.every...')
-        //                bool allTermsMatch = searchTerms.All(term =>
-        //                {
-        //                    // Create Regex for whole word (Matches 'new RegExp(`\\b${escapedTerm}\\b`)')
-        //                    string escapedTerm = Regex.Escape(term);
-        //                    return Regex.IsMatch(contentToCheck, $@"\b{escapedTerm}\b");
-        //                });
-
-        //                // If NOT a match, remove it from the array
-        //                if (!allTermsMatch)
-        //                {
-        //                    items.RemoveAt(i);
-        //                }
-        //            }
-        //        }
-
-        //        // 5. Return the modified JSON (Matches 'res.status(200).json(data)')
-        //        return rootNode.ToJsonString();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        // Error handling
-        //        return JsonSerializer.Serialize(new { error = $"Internal Error: {ex.Message}" });
-        //    }
-        //}
+            // 5. Return the clean, filtered JSON string
+            return root.ToString();
+        }
+        catch (Exception ex)
+        {
+            // Handle network crashes or parsing errors
+            return JsonSerializer.Serialize(new { error = new { message = ex.Message } });
+        }
     }
 }

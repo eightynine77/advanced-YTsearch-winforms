@@ -93,12 +93,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="YouTubeSearchService.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="YouTubeSearchService.Designer.cs">
-      <DependentUpon>YouTubeSearchService.cs</DependentUpon>
-    </Compile>
+    <Compile Include="YouTubeSearchService.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
