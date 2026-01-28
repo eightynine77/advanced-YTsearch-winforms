@@ -100,6 +100,12 @@ namespace YTsearch_Winforms
             l.Stop();
             return port;
         }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            Webview2ErrorMessage webview2ErrorMessage = new Webview2ErrorMessage();
+            webview2ErrorMessage.ShowDialog();
+        }
     }
 
     public class SimpleWebServer
