@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Microsoft.Web.WebView2.Core;
+using System.Diagnostics;
+using System;
 using System.IO;
 using System.Net;
 using System.Net.Sockets; 
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Web;
 
 namespace YTsearch_Winforms
 {
@@ -16,12 +17,48 @@ namespace YTsearch_Winforms
         public Form1()
         {
             InitializeComponent();
-            this.Load += Form1_Load;
-            this.FormClosing += Form1_FormClosing;
+            Load += Form1_Load;
+            FormClosing += Form1_FormClosing;
         }
 
         private async void Form1_Load(object sender, EventArgs e)
         {
+            try
+            {
+                // This checks if the runtime is installed. 
+                // If not, it throws a WebView2RuntimeNotFoundException.
+                string version = CoreWebView2Environment.GetAvailableBrowserVersionString();
+            }
+            catch (WebView2RuntimeNotFoundException)
+            {
+                string message = "Microsoft Edge WebView2 Runtime is missing.\n\n" +
+                                 "This application requires WebView2 to function.\n" +
+                                 "Would you like to download it now?";
+
+                var result = MessageBox.Show(message, "Missing Component", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
+
+                if (result == DialogResult.Yes)
+                {
+                    // Open the official download page
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = "https://go.microsoft.com/fwlink/p/?LinkId=2124703", // Direct link to Evergreen Bootstrapper
+                        UseShellExecute = true
+                    });
+                }
+
+                // Close the app gracefully as we cannot proceed without the runtime
+                Close();
+                return;
+            }
+            catch (Exception ex)
+            {
+                // Catch other weird initialization errors (like DLL missing)
+                MessageBox.Show($"Error checking WebView2 status: {ex.Message}", "Initialization Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Close();
+                return;
+            }
+
             string webRootPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot");
 
             if (!Directory.Exists(webRootPath))
