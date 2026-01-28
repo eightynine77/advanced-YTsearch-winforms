@@ -143,7 +143,7 @@ namespace YTsearch_Winforms
                 string publishedAfter = queryParams.ContainsKey("publishedAfter") ? queryParams["publishedAfter"] : "";
                 string publishedBefore = queryParams.ContainsKey("publishedBefore") ? queryParams["publishedBefore"] : "";
 
-                // OPTIONAL: If the JS sent a key, save it securely for next time
+                // If the JS sent a key, save it securely for next time
                 if (!string.IsNullOrEmpty(key) && key != "undefined")
                 {
                     SecureSettings.SaveApiKey(key);
