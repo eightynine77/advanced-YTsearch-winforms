@@ -30,6 +30,7 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Webview2ErrorMessage));
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.titleText = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -44,15 +45,26 @@
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
             // 
+            // titleText
+            // 
+            this.titleText.AutoSize = true;
+            this.titleText.Location = new System.Drawing.Point(384, 12);
+            this.titleText.Name = "titleText";
+            this.titleText.Size = new System.Drawing.Size(124, 13);
+            this.titleText.TabIndex = 1;
+            this.titleText.Text = "COMPONENT MISSING";
+            // 
             // Webview2ErrorMessage
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(694, 226);
+            this.Controls.Add(this.titleText);
             this.Controls.Add(this.pictureBox1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "Webview2ErrorMessage";
             this.Text = "ERROR";
+            this.Load += new System.EventHandler(this.Webview2ErrorMessage_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -62,5 +74,6 @@
         #endregion
 
         private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.Label titleText;
     }
 }
