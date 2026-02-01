@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Diagnostics;
 using System.Drawing.Text;
 using System.Windows.Forms;
 
@@ -18,8 +13,8 @@ namespace YTsearch_Winforms
             IntPtr pdv, [System.Runtime.InteropServices.In] ref uint pcFonts);
 
         private PrivateFontCollection fonts = new PrivateFontCollection();
-
         Font myFont;
+
         public Webview2ErrorMessage()
         {
             InitializeComponent();
@@ -32,12 +27,20 @@ namespace YTsearch_Winforms
             AddFontMemResourceEx(fontPtr, (uint)Properties.Resources.OpenSansRegular.Length, IntPtr.Zero, ref dummy);
             System.Runtime.InteropServices.Marshal.FreeCoTaskMem(fontPtr);
 
-            titleText.Font = new Font(fonts.Families[0], 16.0F);
+            titleLabel.Font = new Font(fonts.Families[0], 20.25F);
+            descriptionLabel.Font = new Font(fonts.Families[0], 12F);
+            linkLabel1.Font = new Font(fonts.Families[0], 12F);
+            label1.Font = new Font(fonts.Families[0], 10F);
         }
 
         private void Webview2ErrorMessage_Load(object sender, EventArgs e)
         {
 
+        }
+
+        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            Process.Start("https://go.microsoft.com/fwlink/p/?LinkId=2124703");
         }
     }
 }
