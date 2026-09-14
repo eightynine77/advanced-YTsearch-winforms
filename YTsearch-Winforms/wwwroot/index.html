@@ -9,14 +9,17 @@
     <link rel="icon" type="image/x-icon" href="icon.png">
 </head>
 <body class="bg-light">
-    <div class="position-absolute top-0 end-0 p-3">
+    <div class="position-absolute top-0 end-0 p-3 d-flex flex-column gap-2 z-3">
         <button id="settings-btn" class="btn btn-sm btn-outline-secondary">
-            ⚙️ API Settings
+            ⚙️ API and Cache Settings
+        </button>
+        <button id="help-btn" class="btn btn-sm">
+            ℹ️ search operator guide
         </button>
     </div>
     <div class="container pt-5 pb-1">
-        <div class="text-center mb-5">
-            <h1 class="display-5 fw-bold text-danger">advanced youtube search - lumigest</h1>
+        <div class="text-center mb-5 mt-5">
+            <h1><a href="/" class="display-5 fw-bold text-danger" style="text-decoration: none;">advanced youtube search - lumigest</a></h1>
             <p class="lead text-muted">search youtube with high accuracy</p>
         </div>
         <div class="row justify-content-center mb-3">
@@ -36,17 +39,23 @@
                 </div>
                 <div class="d-flex flex-wrap gap-2 mb-3" id="date-filter-wrapper">
                     <div class="flex-grow-1">
-                        <label for="date-after" class="form-label small text-muted mb-0">After:</label>
-                        <input type="date" id="date-after" class="form-control form-control-sm" aria-label="Date after">
+                            <label for="date-after" class="form-label small text-muted mb-0">After (MM-DD-YYYY):</label>
+                            <div class="input-group input-group-sm">
+                                <input type="text" id="date-after" class="form-control" value="MM-DD-YYYY" aria-label="Date after" style="caret-color: transparent;" inputmode="numeric">
+                                <button class="btn btn-outline-secondary open-calendar-btn" type="button" data-target="date-after">📅</button>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <label for="date-before" class="form-label small text-muted mb-0">Before (MM-DD-YYYY):</label>
+                            <div class="input-group input-group-sm">
+                                <input type="text" id="date-before" class="form-control" value="MM-DD-YYYY" aria-label="Date before" style="caret-color: transparent;" inputmode="numeric">
+                                <button class="btn btn-outline-secondary open-calendar-btn" type="button" data-target="date-before">📅</button>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-end">
+                            <button id="clear-dates-button" class="btn btn-outline-secondary btn-sm" type="button" style="height: 31px;">Clear</button>
+                        </div>
                     </div>
-                    <div class="flex-grow-1">
-                        <label for="date-before" class="form-label small text-muted mb-0">Before:</label>
-                        <input type="date" id="date-before" class="form-control form-control-sm" aria-label="Date before">
-                    </div>
-                    <div class="d-flex align-items-end">
-                        <button id="clear-dates-button" class="btn btn-outline-secondary btn-sm" type="button" style="height: 31px;">Clear</button>
-                    </div>
-                </div>
                 <div class="input-group input-group-lg shadow-sm">
                     <input type="text" id="search-input" class="form-control" placeholder="Enter video title..." aria-label="Search term" tabindex="1">
                     <button id="search-button" class="btn btn-danger" type="button" tabindex="2">search</button>
@@ -55,6 +64,7 @@
             </div>
         </div>
     </div>
+    <div id="removed-duplicates-status" class="text-center mb-3 fw-bold text-secondary"></div>
     <div id="search-status" class="text-center mb-3 fw-bold text-secondary"></div>
     <div class="container pb-5" style="overflow-x: hidden;">
         <div id="results-container" class="row g-4 w-100 mx-0"></div>
@@ -64,7 +74,7 @@
         <div class="modal-box">
             <button id="close-modal-btn" class="close-btn">&times;</button>
             
-            <h4 class="mb-3">API Settings</h4>
+            <h4 class="mb-3">API and Cache Settings</h4>
             
             <div class="d-flex align-items-center justify-content-between mb-3">
                 <span class="fw-bold">Use your own API Key</span>
@@ -79,6 +89,99 @@
                 <input type="text" id="user-api-key" class="form-control custom-input" placeholder="Paste your key here..." disabled>
             </div>
             <button id="save-settings-btn" class="btn w-100">Save Settings</button>
+            <hr class="my-4">
+
+            <h5 class="mb-0 fw-bold">Current Cached search</h5>
+            <div class="text-center text-muted small mb-4" id="cached-search-div" style="font-size: 1rem;"><a href="" id="cached-search" style="font-size: 1rem;"></a></div>
+
+            <h5 class="mb-2 fw-bold">Search Cache Management</h5>
+            
+            <div class="d-flex flex-column gap-1 mb-1">
+                <textarea id="cache-text-area" class="form-control" rows="7" placeholder="Paste cache JSON here, or click 'Copy Text' to view..."></textarea>
+                <button id="load-cache-btn" class="btn btn-outline-info btn-sm w-100">👁️ Show Search Cache</button>
+                
+                <div id="cache-status-message" class="text-center fw-bold mt-2" style="min-height: 20px;"></div>
+                
+                <div class="d-flex gap-2">
+                    <button id="copy-cache-btn" class="btn btn-outline-secondary btn-sm flex-fill">📋 Copy Text</button>
+                    <button id="import-text-btn" class="btn btn-outline-primary btn-sm flex-fill">📥 Import Text</button>
+                </div>
+
+                <div class="text-center text-muted small" style="font-size: 1.2em">or</div>
+                
+                <div class="d-flex gap-2">
+                    <button id="export-file-btn" class="btn btn-outline-secondary btn-sm flex-fill">💾 Export File</button>
+                    <button id="import-file-trigger" class="btn btn-outline-primary btn-sm flex-fill">📂 Import File</button>
+                    <input type="file" id="import-file-input" class="d-none" accept=".json">
+                </div>
+            </div>
+            <h5 class="mt-4 mb-2 fw-bold">Delete Search Cache</h5>
+            <button id="clear-cache-btn" class="btn w-100">Delete</button>
+        </div>
+    </div>
+    <div id="calendar-modal" class="modal-overlay hidden">
+        <div class="modal-box" style="max-width: 350px;">
+            <button id="close-calendar-btn" class="close-btn">&times;</button>
+            
+            <div class="d-flex justify-content-between align-items-center mb-3 mt-2">
+                <button id="prev-month-btn" class="btn btn-sm btn-outline-secondary">&lt;</button>
+                <div class="d-flex align-items-center justify-content-center gap-2">
+                    <input type="text" id="calendar-month-input" list="month-list" class="form-control form-control-sm fw-bold text-center text-dark" style="width: 105px; font-size: 1rem;" placeholder="Month">
+                    <datalist id="month-list">
+                        <option value="January"></option>
+                        <option value="February"></option>
+                        <option value="March"></option>
+                        <option value="April"></option>
+                        <option value="May"></option>
+                        <option value="June"></option>
+                        <option value="July"></option>
+                        <option value="August"></option>
+                        <option value="September"></option>
+                        <option value="October"></option>
+                        <option value="November"></option>
+                        <option value="December"></option>
+                    </datalist>
+                    
+                    <input type="number" id="calendar-year-input" class="form-control form-control-sm fw-bold text-center text-dark" style="width: 75px; font-size: 1rem;" min="1970" max="2100">
+                </div>
+                <button id="next-month-btn" class="btn btn-sm btn-outline-secondary">&gt;</button>
+            </div>
+            
+            <div class="d-flex text-center fw-bold text-muted small mb-2">
+                <div style="width: 14.28%;">Su</div>
+                <div style="width: 14.28%;">Mo</div>
+                <div style="width: 14.28%;">Tu</div>
+                <div style="width: 14.28%;">We</div>
+                <div style="width: 14.28%;">Th</div>
+                <div style="width: 14.28%;">Fr</div>
+                <div style="width: 14.28%;">Sa</div>
+            </div>
+            
+            <div id="calendar-days" class="d-flex flex-wrap text-center"></div>
+        </div>
+    </div>
+    <div id="help-modal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <button id="close-help-btn" class="close-btn">&times;</button>
+            
+            <h4 class="mb-3">Search Operator Help</h4>
+            <p class="text-muted small mb-4">You can use special text operators directly in the search bar to force highly specific matches.</p>
+            
+            <h5 class="fw-bold mb-1">The <code>title:</code> Operator</h5>
+            <p class="small mb-2">Forces the search to only show videos where the title contains your exact requested word or phrase.</p>
+            
+            <div class="bg-light p-2 rounded border mb-3 small">
+                <strong>Match a single word:</strong><br>
+                <code>title:game</code><br><br>
+                <strong>Match an exact phrase (use quotes):</strong><br>
+                <code>title:"full gameplay"</code>
+            </div>
+
+            <h6 class="fw-bold mb-1">Combining terms</h6>
+            <p class="small mb-0">You can stack the operator multiple times:</p>
+            <div class="bg-light p-2 rounded border small">
+                <code>title:minecraft title:"part 1" title:survival</code>
+            </div>
         </div>
     </div>
     <script src="js/bootstrap.bundle.min.js"></script>

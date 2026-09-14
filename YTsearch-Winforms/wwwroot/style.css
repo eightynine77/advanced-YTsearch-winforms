@@ -40,12 +40,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #ccc;
+    background: #ff0000;
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #ff0000;
+    background: #bbbbbb;
 }
 
 .search-filter-wrapper {
@@ -102,6 +102,9 @@ body {
     max-width: 400px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     position: relative;
+    max-height: 90vh; /* Prevents it from being taller than 90% of the screen height */
+    overflow-y: auto; /* Adds vertical scrollbar if needed */
+    overflow-x: auto; /* Adds horizontal scrollbar if needed */
 }
 
 .close-btn {
@@ -189,7 +192,115 @@ input:checked + .slider:before {
     background-color: #ee3131;
 }
 
+#clear-cache-btn {
+    background-color: #ff0000;
+    color: white;
+    border-radius: 2mm;
+    border: none;
+}
+
+#clear-cache-btn:hover{
+    background-color: #cc0000;
+}
+
+#clear-cache-btn:active{
+    background-color: #ee3131;
+}
+
+/* Custom Calendar Styling */
+.calendar-day-cell {
+    width: 14.28%;
+    height: 38px;
+    line-height: 38px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.15s, color 0.15s;
+    font-size: 0.9rem;
+    color: #212529;
+}
+
+.calendar-day-cell:hover:not(.empty) {
+    background-color: #f1f3f5;
+}
+
+.calendar-day-cell.empty {
+    cursor: default;
+    background: none !important;
+}
+
+.calendar-day-cell.selected {
+    background-color: #ff0000 !important;
+    color: white !important;
+    font-weight: bold;
+}
+
+#removed-duplicates-status {
+    font-style: italic;
+    color: #ff0000 !important;
+}
+
+#load-cache-btn {
+    background-color: transparent;
+    color: #198754;              /* Bootstrap success green */
+    border: 1px solid #198754;
+    transition: all 0.2s ease;
+}
+
+#load-cache-btn:hover {
+    background-color: #198754;
+    color: white;
+    border-color: #198754;
+}
+
+#load-cache-btn:focus,
+#load-cache-btn:active {
+    background-color: #198754;
+    color: white;
+    border-color: #198754;
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+}
+
+/* Cache Management Styling */
+#cache-text-area {
+    resize: vertical;
+    min-height: 50px;
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: #495057;
+}
+
+#cache-text-area:focus {
+    border-color: #3280f5;
+    box-shadow: 0 0 0 0.25rem rgba(50, 128, 245, 0.25);
+}
+
+#help-btn {
+    background-color: transparent;
+    color: #0078D7;              /* Bootstrap success green */
+    border: 1px solid #0078D7;
+    transition: all 0.2s ease;
+}
+
+#help-btn:hover {
+    background-color: #0078D7;
+    color: white;
+    border-color: #0078D7;
+}
+
+#help-btn:focus,
+#help-btn:active {
+    background-color: #0078D7;
+    color: white;
+    border-color: #0078D7;
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+}
+
 @media (max-width: 576px) {
+    #help-btn {
+        width: 100%;
+        margin-top: 5px;
+    }
+
     #date-filter-wrapper {
         flex-direction: column; 
         gap: 10px !important;
